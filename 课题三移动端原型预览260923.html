@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>移动端运维原型</title>
+  <style>
+    :root {
+      /* 色彩规范 - Element 移动端 */
+      --primary: #004ea0;
+      --primary-dark: #003a78;
+      --primary-light: #E8F1FA;
+      --success: #67C23A;
+      --success-light: #F0F9EB;
+      --warning: #E6A23C;
+      --warning-light: #FDF6EC;
+      --danger: #C9094E;
+      --danger-light: #FEF0F0;
+      --info: #909399;
+      --info-light: #F4F4F5;
+      --text-primary: #303133;
+      --text-regular: #606266;
+      --text-secondary: #909399;
+      --text-placeholder: #CCCCCC;
+      --bg: #F5F7FA;
+      --bg-white: #FFFFFF;
+      --divider: #DCDFE6;
+      --disabled: #F6F7FA;
+      --mask: rgba(0, 0, 0, 0.5);
+
+      /* 标准字 - 设计稿 px 按 1/2 转换为 CSS px */
+      --fs-data: 20px;
+      --fs-title: 18px;
+      --fs-subtitle: 16px;
+      --fs-regular: 14px;
+      --fs-secondary: 12px;
+      --fs-placeholder: 10px;
+
+      /* 间距 - 设计稿 px 按 1/2 */
+      --outer-margin: 12px;
+      --module-gap: 8px;
+      --cell-pad: 8px;
+
+      /* 尺寸 */
+      --nav-height: 44px;
+      --status-height: 24px;
+      --tab-height: 56px;
+      --btn-height-lg: 44px;
+      --btn-height-md: 36px;
+      --btn-height-sm: 28px;
+      --radius: 4px;
+      --tag-height: 22px;
+
+      /* 阴影 */
+      --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-float: 0 -2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #E5E7EB;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* 桌面端手机外框 */
+    /* 手机外壳模块：360dp × 800dp（竖屏比例） */
+    .phone-shell {
+      width: 360px;
+      margin: 0 auto;
+      background: #0f1115;
+      border: 10px solid #0f1115;
+      border-radius: 40px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 外壳听筒 */
+    .phone-shell::before {
+      content: '';
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 18px;
+      background: #0f1115;
+      border-radius: 0 0 12px 12px;
+      z-index: 60;
+    }
+
+    @media (min-width: 421px) {
+      .phone-shell {
+        margin-top: 24px;
+        margin-bottom: 24px;
+      }
+    }
+
+    /* 移动端外壳自适应 */
+    @media (max-width: 440px) {
+      .phone-shell {
+        width: 100%;
+        border-width: 6px;
+        border-radius: 30px;
+      }
+      .phone-shell::before {
+        width: 84px;
+        height: 15px;
+        top: 5px;
+      }
+    }
+
+    .app-frame {
+      width: 100%;
+      height: 800px;
+      background: var(--bg);
+      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 440px) {
+      .app-frame {
+        border-radius: 24px;
+        height: 100vh;
+      }
+    }
+
+    /* 状态栏 */
+    .status-bar {
+      height: var(--status-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--outer-margin);
+      background: var(--bg-white);
+      font-size: var(--fs-secondary);
+      color: var(--text-primary);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .status-bar .time {
+      width: 40px;
+      text-align: left;
+    }
+
+    .status-bar .icons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-bar .icon-signal,
+    .status-bar .icon-wifi,
+    .status-bar .icon-battery {
+      width: 16px;
+      height: 10px;
+      display: inline-block;
+    }
+
+    /* 导航栏 */
+    .nav-bar {
+      height: var(--nav-height);
+      background: var(--bg-white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--outer-margin);
+      position: relative;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .nav-bar::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: var(--divider);
+      transform: scaleY(0.5);
+      transform-origin: 0 100%;
+    }
+
+    .nav-back, .nav-action {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-primary);
+      margin: 0 -12px;
+    }
+
+    .nav-action.text {
+      width: auto;
+      padding: 0 12px;
+      color: var(--primary);
+      font-size: var(--fs-regular);
+    }
+
+    .nav-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--fs-title);
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    /* 屏幕容器 */
+    .screens {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .screen.slide-in {
+      animation: slideIn 0.25s ease forwards;
+    }
+
+    .screen.slide-out {
+      animation: slideOut 0.25s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0.8; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(-30%); opacity: 0.8; }
+    }
+
+    .screen-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(var(--tab-height) + var(--outer-margin));
+    }
+
+    .screen.no-tab .screen-content {
+      padding-bottom: var(--outer-margin);
+    }
+
+    /* 底部标签栏 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--tab-height);
+      background: var(--bg-white);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      z-index: 20;
+    }
+
+    .tab-bar::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: var(--divider);
+      transform: scaleY(0.5);
+      transform-origin: 0 0;
+    }
+
+    .tab-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .tab-item.active {
+      color: var(--primary);
+    }
+
+    .tab-item:active {
+      opacity: 0.7;
+    }
+
+    .tab-icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    .tab-label {
+      font-size: var(--fs-placeholder);
+      line-height: 1.2;
+    }
+
+    /* 通用卡片 */
+    .card {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      padding: var(--module-gap) var(--cell-pad);
+    }
+
+    .card:first-of-type {
+      margin-top: var(--module-gap);
+    }
+
+    /* 搜索栏 */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: var(--bg-white);
+      padding: var(--module-gap) var(--outer-margin);
+      gap: var(--cell-pad);
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      height: 36px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--cell-pad);
+      gap: var(--cell-pad);
+    }
+
+    .search-input-wrap .icon-search {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .search-input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+    }
+
+    .search-input-wrap input::placeholder {
+      color: var(--text-placeholder);
+    }
+
+    .search-input-wrap .icon-clear {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: none;
+    }
+
+    .search-input-wrap.has-value .icon-clear {
+      display: block;
+    }
+
+    .search-cancel {
+      color: var(--primary);
+      font-size: var(--fs-regular);
+      cursor: pointer;
+      display: none;
+    }
+
+    .search-bar.focused .search-cancel {
+      display: block;
+    }
+
+    /* 筛选按钮（搜索栏右侧漏斗图标） */
+    .filter-btn {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .filter-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-regular);
+    }
+
+    .filter-btn.has-filter::after {
+      content: '';
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    /* 状态快速筛选 chips（横向滚动） */
+    .status-chips {
+      display: flex;
+      gap: var(--cell-pad);
+      padding: 0 var(--outer-margin) var(--module-gap);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .status-chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .status-chip {
+      flex: 0 0 auto;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 15px;
+      background: var(--bg-white);
+      border: 1px solid var(--divider);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .status-chip b {
+      font-weight: 600;
+    }
+
+    .status-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .status-chip:active {
+      transform: scale(0.97);
+    }
+
+    /* 筛选弹窗（底部抽屉，约束在手机外壳内） */
+    .filter-sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--mask);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 92;
+    }
+
+    .filter-sheet-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .filter-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      border-radius: 12px 12px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+      z-index: 93;
+      max-height: 78%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .filter-sheet.show {
+      transform: translateY(0);
+    }
+
+    .filter-sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--outer-margin);
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .filter-sheet-header .title {
+      font-size: var(--fs-title);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .filter-sheet-header .close {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .filter-sheet-body {
+      padding: var(--outer-margin);
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .filter-group-row {
+      margin-bottom: var(--outer-margin);
+    }
+
+    .filter-group-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-group-title {
+      font-size: var(--fs-regular);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--cell-pad);
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--cell-pad);
+    }
+
+    .filter-chip {
+      height: 32px;
+      padding: 0 16px;
+      border-radius: 16px;
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+      background: var(--bg);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-chip.active {
+      color: var(--primary);
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .filter-chip:active {
+      transform: scale(0.97);
+    }
+
+    .filter-sheet-footer {
+      display: flex;
+      gap: var(--cell-pad);
+      padding: var(--outer-margin);
+      border-top: 1px solid var(--divider);
+    }
+
+    .filter-sheet-footer .btn {
+      flex: 1;
+    }
+
+    /* 筛选卡片网格 */
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--module-gap);
+      padding: 0 var(--outer-margin);
+      margin-bottom: var(--module-gap);
+    }
+
+    .filter-grid.col2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filter-card {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      padding: var(--module-gap) var(--cell-pad);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      border: 1px solid transparent;
+    }
+
+    .filter-card .icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    .filter-card .count {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 统计卡片：仅保留数字+文本，隐藏图标 */
+    .filter-card .icon { display: none; }
+
+    /* 统计卡片数字 / 图标语义色 */
+    .filter-card.tone-primary .count,
+    .filter-card.tone-primary .icon { color: var(--primary); }
+    .filter-card.tone-warning .count,
+    .filter-card.tone-warning .icon { color: var(--warning); }
+    .filter-card.tone-success .count,
+    .filter-card.tone-success .icon { color: var(--success); }
+    .filter-card.tone-danger .count,
+    .filter-card.tone-danger .icon { color: var(--danger); }
+    .filter-card.tone-info .count,
+    .filter-card.tone-info .icon { color: #5A7C9E; }
+
+    .filter-card .label {
+      font-size: var(--fs-placeholder);
+      color: var(--text-secondary);
+    }
+
+    /* 筛选条 */
+    .filter-bar {
+      background: var(--bg-white);
+      padding: 6px var(--outer-margin);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 0 var(--outer-margin) var(--module-gap);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: var(--cell-pad);
+    }
+
+    .filter-group-label {
+      font-size: var(--fs-secondary);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      width: 28px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .chip {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 14px;
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+      background: var(--bg);
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .chip.active {
+      color: var(--primary);
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .chip:active {
+      transform: scale(0.97);
+    }
+
+    /* 列表项 */
+    .list-item {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      padding: var(--module-gap) var(--cell-pad);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .list-item:first-of-type {
+      margin-top: var(--module-gap);
+    }
+
+    .list-item:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .item-code {
+      font-size: var(--fs-secondary);
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .item-title {
+      font-size: var(--fs-subtitle);
+      color: var(--text-primary);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .item-meta {
+      display: flex;
+      gap: var(--module-gap);
+      margin-top: 6px;
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+      flex-wrap: wrap;
+    }
+
+    .item-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .item-time {
+      font-size: var(--fs-placeholder);
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    /* 状态标签 */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: var(--tag-height);
+      padding: 0 8px;
+      border-radius: var(--radius);
+      font-size: var(--fs-placeholder);
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .tag.primary { color: var(--primary); background: var(--primary-light); border-color: var(--primary); }
+    .tag.success { color: var(--success); background: var(--success-light); border-color: var(--success); }
+    .tag.warning { color: var(--warning); background: var(--warning-light); border-color: var(--warning); }
+    .tag.danger { color: var(--danger); background: var(--danger-light); border-color: var(--danger); }
+    .tag.info { color: var(--info); background: var(--info-light); border-color: var(--info); }
+
+    /* 蓝色详情头部 */
+    .detail-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      padding: var(--outer-margin);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      border-radius: var(--radius);
+      position: relative;
+    }
+
+    .detail-header .code {
+      font-size: var(--fs-secondary);
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .detail-header .title {
+      font-size: var(--fs-title);
+      font-weight: 600;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .detail-header .subtitle {
+      font-size: var(--fs-regular);
+      opacity: 0.9;
+    }
+
+    .detail-header .tag {
+      position: absolute;
+      right: var(--cell-pad);
+      top: var(--cell-pad);
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* 信息区块 */
+    .info-section {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      padding: 0 var(--cell-pad) var(--cell-pad);
+      overflow: hidden;
+    }
+
+    .section-title {
+      font-size: var(--fs-subtitle);
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: var(--module-gap) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    .info-row .label {
+      font-size: var(--fs-regular);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      margin-right: var(--cell-pad);
+    }
+
+    .info-row .value {
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .info-row .value.placeholder {
+      color: var(--text-placeholder);
+    }
+
+    .val-success { color: var(--success); }
+    .val-danger { color: var(--danger); }
+    .val-warning { color: var(--warning); }
+
+    /* 详情页横向可滑动 tab */
+    .has-detail-tabs .info-section { display: none; }
+    .has-detail-tabs .info-section.active { display: block; }
+
+    /* tab 下内容保留卡片（白底+标题+边界），与领单详情一致 */
+    .has-detail-tabs .info-section { margin-top: 16px; margin-bottom: 12px; }
+    .has-detail-tabs .info-section .section-title {
+      display: block;
+      border-bottom: none;
+    }
+    .has-detail-tabs .detail-table-wrap { margin: 8px 0; }
+
+    .detail-tabs {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: var(--bg);
+      padding: 0 var(--outer-margin);
+      border-bottom: 1px solid var(--divider);
+      scrollbar-width: none;
+    }
+    .detail-tabs::-webkit-scrollbar { display: none; }
+    /* 尾部留白暗示可继续右滑 */
+    .detail-tabs::after { content: ''; flex: 0 0 var(--outer-margin); }
+
+    .detail-tab {
+      flex: 0 0 auto;
+      padding: 10px 14px;
+      font-size: var(--fs-regular);
+      color: var(--text-regular);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -1px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .detail-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* 执行记录 Tab 上标注的对应工单类型 */
+    .detail-tab-type {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 0 4px;
+      font-style: normal;
+      font-size: var(--fs-placeholder);
+      font-weight: 400;
+      line-height: 16px;
+      color: var(--text-secondary);
+      background: var(--info-light);
+      border-radius: 2px;
+      vertical-align: 1px;
+    }
+    .detail-tab.active .detail-tab-type {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* 执行记录缩略图 */
+    .sub-label {
+      font-size: var(--fs-regular);
+      color: var(--text-regular);
+      margin: 10px 0 2px;
+    }
+    .thumb-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 4px 0 2px;
+    }
+    .thumb {
+      width: 74px;
+      height: 74px;
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .thumb .ph-ico { width: 30px; height: 30px; color: rgba(255,255,255,.85); }
+    .thumb .cap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      font-size: 9px; color: #fff; background: rgba(0,0,0,.45);
+      padding: 1px 2px; text-align: center; line-height: 1.2;
+    }
+    .thumb .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .thumb .play svg { width: 22px; height: 22px; color: #fff; }
+    .thumb.s1 { background: linear-gradient(135deg, #6fa8ff, #2f6fb0); }
+    .thumb.s2 { background: linear-gradient(135deg, #7fd6c2, #3a8f7c); }
+    .thumb.s3 { background: linear-gradient(135deg, #f3c08a, #c9852f); }
+
+    .doc-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
+    .doc-thumb {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px; background: var(--bg-white);
+      border: 1px solid var(--divider); border-radius: var(--radius);
+      font-size: var(--fs-secondary); color: var(--text-primary);
+    }
+    .doc-ico {
+      width: 26px; height: 26px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 9px; font-weight: 700; flex-shrink: 0;
+    }
+    .doc-ico.pdf { background: #e0506a; }
+    .doc-ico.xlsx { background: #2f9e6f; }
+    .doc-ico.zip { background: #8a7bd8; }
+
+    /* 执行记录内附件固定三列一行，与设计稿一致（仅作用于执行记录区块） */
+    .exec-record .doc-thumbs { gap: 6px; }
+    .exec-record .doc-thumb { padding: 4px; gap: 4px; }
+    .exec-record .doc-ico { width: 20px; height: 20px; }
+
+    /* 领单详情：底部固定按钮 */
+    .detail-footer {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 10px var(--outer-margin);
+      background: var(--bg-white);
+      border-top: 1px solid var(--divider);
+      z-index: 30;
+      box-shadow: 0 -2px 8px rgba(0,0,0,.05);
+    }
+    #screen-claim-detail .screen-content { padding-bottom: 64px; }
+    #screen-claim-detail .section-title { border-bottom: none; }
+    #screen-claim-detail .detail-footer {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 10px var(--outer-margin);
+    }
+    .claim-deadline {
+      font-size: var(--fs-secondary);
+      opacity: 0.95;
+      margin-top: 6px;
+    }
+
+    /* 详情内表格（横向滚动） */
+    .detail-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: var(--cell-pad);
+    }
+
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-secondary);
+    }
+
+    /* 列数较多、一屏放不下的宽表才横向滚动 */
+    .detail-table.wide {
+      min-width: 560px;
+    }
+
+    .detail-table th,
+    .detail-table td {
+      border: 1px solid var(--divider);
+      padding: 5px 6px;
+      text-align: left;
+      color: var(--text-regular);
+      white-space: nowrap;
+      line-height: 1.3;
+    }
+
+    .detail-table th {
+      background: var(--bg);
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .detail-table td.num {
+      text-align: center;
+    }
+
+    /* 受限条件 / 多值清单 */
+    .cond-list {
+      margin-top: var(--cell-pad);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cond-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+      line-height: 1.4;
+    }
+
+    .cond-item .ck {
+      color: var(--text-secondary);
+      flex: 0 0 auto;
+    }
+
+    .cond-item .req {
+      color: var(--text-primary);
+    }
+
+    .cond-item .act {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* 时间线 */
+    .timeline {
+      padding: var(--module-gap) 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      position: relative;
+      padding-bottom: 16px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 18px;
+      bottom: 0;
+      width: 2px;
+      background: var(--divider);
+    }
+
+    .timeline-item:last-child::before {
+      display: none;
+    }
+
+    .timeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: #fff;
+      flex-shrink: 0;
+      margin-right: var(--cell-pad);
+      margin-top: 3px;
+      z-index: 1;
+    }
+
+    .timeline-item.active .timeline-dot {
+      background: var(--primary);
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .timeline-title {
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .timeline-time {
+      font-size: var(--fs-placeholder);
+      color: var(--text-secondary);
+    }
+
+    .timeline-desc {
+      font-size: var(--fs-secondary);
+      color: var(--text-regular);
+    }
+
+    /* 表单 */
+    .form-section {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      padding: 0 var(--cell-pad);
+      overflow: hidden;
+    }
+
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .form-row:last-child {
+      border-bottom: none;
+    }
+
+    .form-row .label {
+      font-size: var(--fs-regular);
+      color: var(--text-regular);
+      margin-right: var(--cell-pad);
+    }
+
+    .form-row .value {
+      flex: 1;
+      text-align: right;
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+    }
+
+    .form-row input {
+      flex: 1;
+      text-align: right;
+      border: none;
+      outline: none;
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+      background: transparent;
+    }
+
+    .form-row input::placeholder {
+      color: var(--text-placeholder);
+    }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: var(--btn-height-lg);
+      padding: 0 24px;
+      border-radius: var(--radius);
+      font-size: var(--fs-regular);
+      font-weight: 500;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn:active {
+      opacity: 0.85;
+      transform: scale(0.99);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-default {
+      background: #fff;
+      color: var(--text-primary);
+      border-color: var(--divider);
+    }
+
+    .btn-default:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-block {
+      width: calc(100% - var(--outer-margin) * 2);
+      margin: var(--outer-margin);
+    }
+
+    /* 个人中心头部 */
+    .profile-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      margin: var(--module-gap) var(--outer-margin);
+      border-radius: var(--radius);
+      padding: var(--outer-margin);
+      display: flex;
+      align-items: center;
+      gap: var(--outer-margin);
+      color: #fff;
+      position: relative;
+    }
+
+    .profile-logout {
+      position: absolute;
+      top: var(--cell-pad);
+      right: var(--cell-pad);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      opacity: 0.9;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    .profile-logout:active { opacity: 1; background: rgba(255,255,255,.15); }
+    .profile-logout svg { width: 20px; height: 20px; }
+
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar svg {
+      width: 28px;
+      height: 28px;
+      color: #fff;
+    }
+
+    .profile-info .name {
+      font-size: var(--fs-title);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .profile-info .role {
+      font-size: var(--fs-secondary);
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+
+    /* 菜单项 */
+    .menu-item {
+      background: var(--bg-white);
+      border-radius: var(--radius);
+      margin: 0 var(--outer-margin) var(--module-gap);
+      padding: var(--module-gap) var(--cell-pad);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .menu-item:active {
+      transform: scale(0.99);
+    }
+
+    .menu-item .left {
+      display: flex;
+      align-items: center;
+      gap: var(--cell-pad);
+    }
+
+    .menu-item .icon {
+      width: 22px;
+      height: 22px;
+      color: var(--primary);
+    }
+
+    .menu-item .label {
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+    }
+
+    .menu-item .arrow {
+      width: 16px;
+      height: 16px;
+      color: var(--text-secondary);
+    }
+
+    /* 空状态 */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px var(--outer-margin);
+      color: var(--text-secondary);
+      font-size: var(--fs-regular);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: var(--fs-regular);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--mask);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 90;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      width: 76%;
+      max-width: 300px;
+      background: #fff;
+      border-radius: var(--radius);
+      padding: var(--outer-margin);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s;
+      z-index: 91;
+    }
+
+    .modal.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-title {
+      font-size: var(--fs-title);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      font-size: var(--fs-regular);
+      color: var(--text-regular);
+      text-align: center;
+      margin-bottom: var(--outer-margin);
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: var(--cell-pad);
+    }
+
+    .modal-footer .btn {
+      flex: 1;
+    }
+
+    /* 复选框 */
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--divider);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* 辅助 */
+    .mt-0 { margin-top: 0; }
+    .mb-0 { margin-bottom: 0; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: 600; }
+
+    /* 滚动条隐藏 */
+    .screen-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* 搜索建议 */
+    .suggestion-list {
+      background: var(--bg-white);
+      margin: 0 var(--outer-margin);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .suggestion-item {
+      padding: 12px var(--cell-pad);
+      border-bottom: 1px solid var(--divider);
+      font-size: var(--fs-regular);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:active {
+      background: var(--bg);
+    }
+
+    /* 底部按钮区 */
+    .bottom-actions {
+      padding: var(--outer-margin);
+      background: var(--bg-white);
+      border-top: 1px solid var(--divider);
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="app-frame">
+    <!-- 状态栏 -->
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">
+        <svg class="icon-signal" viewBox="0 0 16 10" fill="currentColor"><rect x="0" y="6" width="2" height="4" rx="0.3"/><rect x="3" y="4" width="2" height="6" rx="0.3"/><rect x="6" y="2" width="2" height="8" rx="0.3"/><rect x="9" y="0" width="2" height="10" rx="0.3"/></svg>
+        <svg class="icon-wifi" viewBox="0 0 16 12" fill="currentColor"><path d="M8 0L0 8h2l6-6 6 6h2L8 0zm0 4L2 10h2l4-4 4 4h2L8 4z"/></svg>
+        <svg class="icon-battery" viewBox="0 0 24 10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="0.6" y="0.6" width="20.8" height="8.8" rx="1.5"/><rect x="2" y="2" width="16" height="6" rx="1" fill="currentColor"/><path d="M22 3h1.5a0.5 0.5 0 0 1 0.5 0.5v3a0.5 0.5 0 0 1 -0.5 0.5H22" fill="currentColor"/></svg>
+      </span>
+    </div>
+
+    <!-- 屏幕 -->
+    <div class="screens">
+      <!-- 任务池 -->
+      <div class="screen active" id="screen-task-pool" data-tab="0">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">任务池</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content">
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" placeholder="搜索设备名称、编号" oninput="onInlineSearch('screen-task-pool', this)">
+              <svg class="icon-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="clearInlineSearch('screen-task-pool')"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+            </div>
+            <button class="filter-btn" onclick="openFilterPopup('screen-task-pool')">
+              <svg class="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
+            </button>
+          </div>
+          <div class="filter-grid" id="task-filter-grid">
+            <div class="filter-card active tone-primary" data-index="0"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="count">89</div><div class="label">任务总数</div></div>
+            <div class="filter-card tone-warning" data-index="1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="count">35</div><div class="label">待排程</div></div>
+            <div class="filter-card tone-primary" data-index="2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 14l2 2 6-6"/></svg></div><div class="count">28</div><div class="label">已排程</div></div>
+            <div class="filter-card tone-info" data-index="3"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="count">16</div><div class="label">已派单</div></div>
+            <div class="filter-card tone-success" data-index="4"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div class="count">07</div><div class="label">已完成</div></div>
+          </div>
+          <div class="list-item" data-type="维护任务" data-time="week" data-status="待排程" onclick="navigateTo('screen-task-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-001</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag warning">待排程</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">任务生成时间：2026-09-22 17:08:07</div>
+          </div>
+          <div class="list-item" data-type="维护任务" data-time="week" data-status="已排程" onclick="navigateTo('screen-task-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-002</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag primary">已排程</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">任务生成时间：2026-09-22 17:08:07</div>
+          </div>
+          <div class="list-item" data-type="故障任务" data-time="month" data-status="已派单" onclick="navigateTo('screen-task-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-003</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag info">已派单</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">任务生成时间：2026-09-22 17:08:07</div>
+          </div>
+          <div class="list-item" data-type="维护任务" data-time="month" data-status="已完成" onclick="navigateTo('screen-task-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-004</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag success">已完成</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">任务生成时间：2026-09-22 17:08:07</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 任务详情 -->
+      <div class="screen" id="screen-task-detail">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">任务详情</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content no-tab">
+          <div class="detail-header">
+            <div class="code">TSK-20260605-016</div>
+            <div class="title">WT-027 叶片定期维护</div>
+            <div class="subtitle">维护任务 · 07-24 11:20</div>
+            <span class="tag warning">待排程</span>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">来源信息</div>
+            <div class="info-row"><span class="label">来源名称</span><span class="value">风机年度维护计划</span></div>
+            <div class="info-row"><span class="label">来源类型</span><span class="value">维护计划</span></div>
+            <div class="info-row"><span class="label">来源计划编号</span><span class="value">MNT-2026-002</span></div>
+            <div class="info-row"><span class="label">巡检类型</span><span class="value">年度维护</span></div>
+            <div class="info-row"><span class="label">巡检周期</span><span class="value">每年 一次</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">任务对象信息</div>
+            <div class="info-row"><span class="label">风场名称</span><span class="value">贵电一期</span></div>
+            <div class="info-row"><span class="label">设备类型</span><span class="value">风机</span></div>
+            <div class="info-row"><span class="label">范围方式</span><span class="value">分组设备</span></div>
+            <div class="info-row"><span class="label">对象数量</span><span class="value">24台</span></div>
+            <div class="info-row"><span class="label">巡检范围</span><span class="value">A区风机</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">缺陷评估</div>
+            <div class="info-row"><span class="label">标准名称</span><span class="value">风机日常巡检标准</span></div>
+            <div class="info-row"><span class="label">标准版本</span><span class="value">V1.2</span></div>
+            <div class="info-row"><span class="label">维护范围</span><span class="value">共 4 项</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table wide">
+                <thead>
+                  <tr><th>序号</th><th>维护项目</th><th>维护部位</th><th>维护方式</th><th>判定标准</th><th>是否必做</th><th>记录方式</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="num">1</td><td>塔筒外现检查</td><td>塔离外壁</td><td>目视检查</td><td>无明显裂纹、锈蚀、渗油痕迹</td><td>必检</td><td>正常/异常</td></tr>
+                  <tr><td class="num">2</td><td>机舱油位检查</td><td>齿轮箱油标</td><td>红外测试</td><td>油位处于上下限刻度之间</td><td>必检</td><td>正常/异常</td></tr>
+                  <tr><td class="num">3</td><td>齿轮箱漏油检查</td><td>齿轮箱密封面</td><td>目视检查</td><td>各密封面无渗漏油痕迹</td><td>必检</td><td>数值录入</td></tr>
+                  <tr><td class="num">4</td><td>发电机温度检查</td><td>发电机定子绕组</td><td>红外测试</td><td>绕组温升≤80°C</td><td>必检</td><td>数值录入</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">执行计划</div>
+            <div class="info-row"><span class="label">最早开始时间</span><span class="value">2026-06-11 08:00</span></div>
+            <div class="info-row"><span class="label">最晚结束时间</span><span class="value">2026-06-11 16:00</span></div>
+            <div class="info-row"><span class="label">预计工时</span><span class="value">6 小时</span></div>
+            <div class="info-row"><span class="label">是否停机</span><span class="value">停机</span></div>
+            <div class="info-row"><span class="label">计划作业窗口</span><span class="value">06:00-18:00 白班作业窗口</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">资源需求</div>
+            <div class="info-row"><span class="label">人员需求</span><span class="value">叶片检修师 ×2 结构工程师 ×1</span></div>
+            <div class="info-row"><span class="label">船舶需求</span><span class="value">运维船 ×1</span></div>
+            <div class="info-row"><span class="label">车辆需求</span><span class="value">工程车 ×1</span></div>
+            <div class="info-row"><span class="label">工器具需求</span><span class="value">液压工具×1套、扭矩扁手×1、润滑设备×1、测振仪×1</span></div>
+            <div class="info-row"><span class="label">备件需求</span><span class="value">力矩扳手、防雷检测仪、修补材料×2组</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">排程信息</div>
+            <div class="info-row"><span class="label">排程状态</span><span class="value val-success">可派单</span></div>
+            <div class="info-row"><span class="label">优先级得分</span><span class="value">0.73</span></div>
+            <div class="info-row"><span class="label">优先级等级</span><span class="value">P2</span></div>
+            <div class="info-row"><span class="label">排名</span><span class="value">第 4 位</span></div>
+            <div class="info-row"><span class="label">推荐执行时间</span><span class="value">2026-06-01 07:00</span></div>
+            <div class="info-row"><span class="label">所属系统</span><span class="value">高压配电系统</span></div>
+            <div class="cond-list">
+              <div class="cond-item"><span class="ck">风速限制</span><span class="req">要求 ≤10m/s</span><span class="act">8.2m/s</span></div>
+              <div class="cond-item"><span class="ck">人员数量</span><span class="req">要求 ≥2人</span><span class="act">可用5人</span></div>
+              <div class="cond-item"><span class="ck">技能要求</span><span class="req">要求 GWO证</span><span class="act">3人持证</span></div>
+              <div class="cond-item"><span class="ck">船舶资源</span><span class="req">要求 运维船×1</span><span class="act">贵运301可用</span></div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">派单信息</div>
+            <div class="info-row"><span class="label">派单模式</span><span class="value">自动派单</span></div>
+            <div class="info-row"><span class="label">派单对象</span><span class="value">徐守诚</span></div>
+            <div class="info-row"><span class="label">是否已接单</span><span class="value val-success">07-24 11:20</span></div>
+            <div class="info-row"><span class="label">派单时间</span><span class="value">07-19 21:51</span></div>
+            <div class="info-row"><span class="label">接单时间</span><span class="value">07-19 22:51</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">关联对象</div>
+            <div class="info-row"><span class="label">维护计划编号</span><span class="value">MNT-2026-001</span></div>
+            <div class="info-row"><span class="label">任务编号</span><span class="value">TSK-20260604-02</span></div>
+            <div class="info-row"><span class="label">工单编号</span><span class="value">WO-20260604-02</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自行领单 -->
+      <div class="screen" id="screen-claim-list" data-tab="1">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">自行领单</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content">
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" placeholder="搜索设备名称、编号" oninput="onInlineSearch('screen-claim-list', this)">
+              <svg class="icon-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="clearInlineSearch('screen-claim-list')"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+            </div>
+            <button class="filter-btn" onclick="openFilterPopup('screen-claim-list')">
+              <svg class="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
+            </button>
+          </div>
+          <div class="list-item" data-priority="P1" data-type="维护任务" data-timeout="未超时" onclick="navigateTo('screen-claim-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-001</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag danger">P1</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">派单超时状态：剩余 1时24分</div>
+          </div>
+          <div class="list-item" data-priority="P2" data-type="维护任务" data-timeout="未超时" onclick="navigateTo('screen-claim-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-002</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag warning">P2</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">派单超时状态：剩余 1时24分</div>
+          </div>
+          <div class="list-item" data-priority="P3" data-type="维护任务" data-timeout="已超时" onclick="navigateTo('screen-claim-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-003</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag warning">P3</span>
+            </div>
+            <div class="item-meta"><span>类型：维护任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">派单超时状态：已超时</div>
+          </div>
+          <div class="list-item" data-priority="P4" data-type="故障任务" data-timeout="未超时" onclick="navigateTo('screen-claim-detail')">
+            <div class="item-header">
+              <div>
+                <div class="item-code">TSK-20260922-004</div>
+                <div class="item-title">WT-025 主轴承定期维护</div>
+              </div>
+              <span class="tag primary">P4</span>
+            </div>
+            <div class="item-meta"><span>类型：故障任务</span><span>场站：OOS-001</span></div>
+            <div class="item-time">派单超时状态：剩余 1时24分</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 领单详情 -->
+      <div class="screen" id="screen-claim-detail">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">领单详情</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content no-tab">
+          <div class="detail-header">
+            <div class="code">TSK-20260922-001</div>
+            <div class="title">WT-025 主轴承定期维护</div>
+            <div class="subtitle">故障任务</div>
+            <div class="claim-deadline">领单时限：剩余 1时24分</div>
+            <span class="tag">P1</span>
+          </div>
+          <div class="info-section">
+            <div class="section-title">派单详情</div>
+            <div class="info-row"><span class="label">任务编号</span><span class="value">TSK-20260922-001</span></div>
+            <div class="info-row"><span class="label">任务名称</span><span class="value">WT-025 主轴承定期维护</span></div>
+            <div class="info-row"><span class="label">任务类型</span><span class="value val-danger">故障任务</span></div>
+            <div class="info-row"><span class="label">所属风场</span><span class="value">贵电一期</span></div>
+            <div class="info-row"><span class="label">所属设备</span><span class="value">WT-024</span></div>
+            <div class="info-row"><span class="label">优先级</span><span class="value val-danger">P1</span></div>
+            <div class="info-row"><span class="label">派单模式</span><span class="value val-warning">待自行领单</span></div>
+            <div class="info-row"><span class="label">工单负责人</span><span class="value val-warning">待自行领单</span></div>
+            <div class="info-row"><span class="label">工单编号</span><span class="value">WO20260922</span></div>
+          </div>
+        </div>
+        <div class="detail-footer">
+          <button class="btn btn-primary btn-block" onclick="confirmClaim()">确认领单</button>
+        </div>
+      </div>
+
+      <!-- 工单 -->
+      <div class="screen" id="screen-work-order" data-tab="2">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">工单</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content">
+          <div class="search-bar">
+            <div class="search-input-wrap">
+              <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" placeholder="搜索设备名称、编号" oninput="onInlineSearch('screen-work-order', this)">
+              <svg class="icon-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="clearInlineSearch('screen-work-order')"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+            </div>
+            <button class="filter-btn" onclick="openFilterPopup('screen-work-order')">
+              <svg class="icon-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
+            </button>
+          </div>
+          <div class="filter-grid" id="wo-filter-grid">
+            <div class="filter-card active tone-warning"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><div class="count">53</div><div class="label">待接单</div></div>
+            <div class="filter-card tone-info"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><div class="count">31</div><div class="label">待开工</div></div>
+            <div class="filter-card tone-primary"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><div class="count">19</div><div class="label">执行中</div></div>
+            <div class="filter-card tone-warning"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><div class="count">12</div><div class="label">待确认</div></div>
+            <div class="filter-card tone-success"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div class="count">06</div><div class="label">已完成</div></div>
+            <div class="filter-card tone-danger"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div><div class="count">03</div><div class="label">驳回修改</div></div>
+          </div>
+          <div class="list-item" data-type="维护工单" data-time="week" data-status="待接单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-001</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag info">待接单</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+            <div style="color:var(--danger);font-size:var(--fs-placeholder);margin-top:4px;">超时 3min</div>
+          </div>
+          <div class="list-item" data-type="维护工单" data-time="week" data-status="待开工" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-002</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag warning">待开工</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="故障工单" data-time="month" data-status="执行中" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-003</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag primary">执行中</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="维护工单" data-time="month" data-status="待确认" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-004</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag warning">待确认</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 工单详情 -->
+      <div class="screen" id="screen-wo-detail">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">工单详情</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content no-tab">
+          <div class="detail-header">
+            <div class="code">WO-2026060901</div>
+            <div class="title">WT-007 定期巡检</div>
+            <div class="subtitle">故障处理工单</div>
+            <span class="tag warning">待确认</span>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">设备信息</div>
+            <div class="info-row"><span class="label">所属场站</span><span class="value">贵电一期</span></div>
+            <div class="info-row"><span class="label">设备类型</span><span class="value">风机</span></div>
+            <div class="info-row"><span class="label">设备名称</span><span class="value">7#风机</span></div>
+            <div class="info-row"><span class="label">设备编号</span><span class="value">WT-007</span></div>
+            <div class="info-row"><span class="label">设备型号</span><span class="value">WO-20260607-001</span></div>
+            <div class="info-row"><span class="label">所属系统</span><span class="value">叶片系统</span></div>
+            <div class="info-row"><span class="label">部件名称</span><span class="value">叶片边缘</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">巡检对象</div>
+            <div class="info-row"><span class="label">所属场站</span><span class="value">贵电一期</span></div>
+            <div class="info-row"><span class="label">巡检类型</span><span class="value">周巡检</span></div>
+            <div class="info-row"><span class="label">设备类型</span><span class="value">风机</span></div>
+            <div class="info-row"><span class="label">巡检范围</span><span class="value">指定设备</span></div>
+            <div class="info-row"><span class="label">巡检设备</span><span class="value">7#风机</span></div>
+            <div class="info-row"><span class="label">对象数量</span><span class="value">1台</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">维护对象</div>
+            <div class="info-row"><span class="label">所属场站</span><span class="value">贵电一期</span></div>
+            <div class="info-row"><span class="label">巡检类型</span><span class="value">日常维护</span></div>
+            <div class="info-row"><span class="label">设备类型</span><span class="value">风机</span></div>
+            <div class="info-row"><span class="label">巡检范围</span><span class="value">指定设备</span></div>
+            <div class="info-row"><span class="label">巡检设备</span><span class="value">7#风机、设备2、设备3</span></div>
+            <div class="info-row"><span class="label">对象数量</span><span class="value">3台</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">缺陷信息</div>
+            <div class="info-row"><span class="label">缺陷名称</span><span class="value">塔筒外壁防腐涂层剥落</span></div>
+            <div class="info-row"><span class="label">缺陷等级</span><span class="value val-danger">重大</span></div>
+            <div class="info-row"><span class="label">缺陷原因</span><span class="value">主变压器散热器翅片海盐结晶堵塞，叠加高负荷运行导致顶层油温持续超限</span></div>
+            <div class="info-row"><span class="label">评估结论</span><span class="value">确认为主变压器冷却系统散热效率下降故障</span></div>
+            <div class="info-row"><span class="label">风险评估</span><span class="value">长期高温运行将加速绝缘油老化，存在绝缘击穿风险</span></div>
+            <div class="info-row"><span class="label">风险等级</span><span class="value val-danger">重大</span></div>
+            <div class="info-row"><span class="label">建议维修方案</span><span class="value">清洗散热器翅片，并临时降负荷运行</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">故障信息</div>
+            <div class="info-row"><span class="label">故障名称</span><span class="value">塔筒外壁防腐涂层剥落</span></div>
+            <div class="info-row"><span class="label">故障等级</span><span class="value val-danger">重大</span></div>
+            <div class="info-row"><span class="label">故障原因</span><span class="value">主变压器散热器翅片海盐结晶堵塞，叠加高负荷运行导致顶层油温持续超限</span></div>
+            <div class="info-row"><span class="label">评估结论</span><span class="value">确认为主变压器冷却系统散热效率下降故障</span></div>
+            <div class="info-row"><span class="label">风险评估</span><span class="value">长期高温运行将加速绝缘油老化，存在绝缘击穿风险</span></div>
+            <div class="info-row"><span class="label">风险等级</span><span class="value val-danger">重大</span></div>
+            <div class="info-row"><span class="label">建议处置</span><span class="value">清洗散热器翅片，并临时降负荷运行</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">预警信息</div>
+            <div class="info-row"><span class="label">预警名称</span><span class="value">塔筒外壁防腐涂层剥落</span></div>
+            <div class="info-row"><span class="label">缺陷等级</span><span class="value val-danger">重大</span></div>
+            <div class="info-row"><span class="label">异常部件</span><span class="value">叶片边缘</span></div>
+            <div class="info-row"><span class="label">异常指标</span><span class="value">叶片振动不平衡量3.4 mm</span></div>
+            <div class="info-row"><span class="label">异常说明</span><span class="value">叶片振动不平衡量持续增大，结合上次巡检影像识别到前缘裂纹，模型预测裂纹处于稳定扩展阶段。</span></div>
+            <div class="info-row"><span class="label">建议检查内容</span><span class="value">安排叶片专项检查，重点拍摄前缘裂纹区域并测量长度，评估是否需停机修复。</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">工单问题</div>
+            <div class="info-row"><span class="label">问题描述</span><span class="value">塔筒外壁防腐涂层剥落</span></div>
+            <div class="info-row"><span class="label">问题等级</span><span class="value val-danger">高</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">执行计划</div>
+            <div class="info-row"><span class="label">计划开始时间</span><span class="value">2026-06-12 09:00</span></div>
+            <div class="info-row"><span class="label">计划结束时间</span><span class="value">2026-06-12 16:00</span></div>
+            <div class="info-row"><span class="label">预计工时</span><span class="value">7 小时</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">资源需求</div>
+            <div class="info-row"><span class="label">工单负责人</span><span class="value">张三</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table">
+                <thead><tr><th>专业要求</th><th>技能要求</th><th>数量</th></tr></thead>
+                <tbody>
+                  <tr><td>巡检员</td><td>登高证</td><td class="num">4人</td></tr>
+                  <tr><td>工程师</td><td>电工进网证</td><td class="num">2人</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-row"><span class="label">船舶需求</span><span class="value">运维船×8、补给船×1</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table">
+                <thead><tr><th>船舶种类</th><th>数量</th></tr></thead>
+                <tbody>
+                  <tr><td>运维船</td><td class="num">8艘</td></tr>
+                  <tr><td>补给船</td><td class="num">1艘</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-row"><span class="label">车辆需求</span><span class="value">货车×3、工程车×7</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table">
+                <thead><tr><th>车辆种类</th><th>数量</th></tr></thead>
+                <tbody>
+                  <tr><td>货车</td><td class="num">3辆</td></tr>
+                  <tr><td>工程车</td><td class="num">7辆</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-row"><span class="label">备件需求</span><span class="value">连接件×1、滤芯×1</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table">
+                <thead><tr><th>备件种类</th><th>数量</th></tr></thead>
+                <tbody>
+                  <tr><td>连接件</td><td class="num">1个</td></tr>
+                  <tr><td>滤芯</td><td class="num">1个</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-row"><span class="label">工器具需求</span><span class="value">巡检工具包×1、振动监测器×1</span></div>
+            <div class="detail-table-wrap">
+              <table class="detail-table">
+                <thead><tr><th>工器具种类</th><th>数量</th></tr></thead>
+                <tbody>
+                  <tr><td>巡检工具包</td><td class="num">1个</td></tr>
+                  <tr><td>振动监测器</td><td class="num">1个</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">工作票信息摘要</div>
+            <div class="info-row"><span class="label">工作票类型</span><span class="value">第一种工作票</span></div>
+            <div class="info-row"><span class="label">工作票编号</span><span class="value">WT-2026060901</span></div>
+            <div class="info-row"><span class="label">工作票状态</span><span class="value">待安全审核</span></div>
+            <div class="info-row"><span class="label">开工许可证状态</span><span class="value">-</span></div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">操作票信息摘要</div>
+            <div class="info-row"><span class="label">工作票编号</span><span class="value">WT-2026060901</span></div>
+            <div class="info-row"><span class="label">工作票状态</span><span class="value val-warning">待审核</span></div>
+          </div>
+
+          <div class="info-section exec-record" data-wo-type="巡检工单" data-wo-label="巡检工单">
+            <div class="section-title">执行记录（1）</div>
+            <div class="info-row"><span class="label">到场时间</span><span class="value">2026/07/03 14:00</span></div>
+            <div class="info-row"><span class="label">完工时间</span><span class="value">2026/07/03 18:04</span></div>
+            <div class="info-row"><span class="label">机舱检查</span><span class="value val-success">正常</span></div>
+            <div class="info-row"><span class="label">发电机温度检查</span><span class="value val-danger">异常</span></div>
+            <div class="info-row"><span class="label">巡检结论</span><span class="value">机舱设备运行正常；发电机定子温度较历史均值偏高约 8℃，已列入重点跟踪并上报。</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片一</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片二</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片三</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>文件一链接</div>
+              <div class="doc-thumb"><span class="doc-ico xlsx">XLS</span>文件二链接</div>
+              <div class="doc-thumb"><span class="doc-ico zip">ZIP</span>文件三链接</div>
+            </div>
+          </div>
+
+          <div class="info-section exec-record" data-wo-type="维护工单" data-wo-label="维护工单">
+            <div class="section-title">执行记录（2）</div>
+            <div class="info-row"><span class="label">到场时间</span><span class="value">2026/07/03 14:00</span></div>
+            <div class="info-row"><span class="label">完工时间</span><span class="value">2026/07/03 18:04</span></div>
+            <div class="info-row"><span class="label">机舱检查</span><span class="value val-success">正常</span></div>
+            <div class="info-row"><span class="label">发电机温度检查</span><span class="value val-danger">异常</span></div>
+            <div class="info-row"><span class="label">维护结论</span><span class="value">叶片前缘裂纹已按防腐修复工艺完成打磨、补强与涂层施工，复检附着力达标，具备长期运行条件。</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片一</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片二</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片三</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>文件一链接</div>
+              <div class="doc-thumb"><span class="doc-ico xlsx">XLS</span>文件二链接</div>
+              <div class="doc-thumb"><span class="doc-ico zip">ZIP</span>文件三链接</div>
+            </div>
+          </div>
+
+          <div class="info-section exec-record" data-wo-type="故障工单" data-wo-label="故障/缺陷工单">
+            <div class="section-title">执行记录（3）</div>
+            <div class="info-row"><span class="label">到场时间</span><span class="value">2026/07/03 14:00</span></div>
+            <div class="info-row"><span class="label">完工时间</span><span class="value">2026/07/03 18:04</span></div>
+            <div class="info-row"><span class="label">现场检查情况</span><span class="value">现场核查主变压器散热器翅片附着海盐结晶，通风间隙堵塞约 60%，顶层油温 92℃。</span></div>
+            <div class="info-row"><span class="label">实际故障现象</span><span class="value val-danger">顶层油温持续超限报警，风扇全速仍无法降至告警线以下。</span></div>
+            <div class="info-row"><span class="label">是否与诊断一致</span><span class="value val-success">是</span></div>
+            <div class="info-row"><span class="label">实际处置措施</span><span class="value">高压水枪配合中性清洗剂冲洗翅片，清除结晶后复位，并临时降负荷至 80% 运行。</span></div>
+            <div class="info-row"><span class="label">更换部件</span><span class="value">密封垫圈 ×4、温度传感器 ×1、风机电容 ×2、螺栓紧固件 ×12、清洗喷头 ×1</span></div>
+            <div class="info-row"><span class="label">是否恢复正常</span><span class="value val-success">是</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片一</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片二</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片三</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>文件一链接</div>
+              <div class="doc-thumb"><span class="doc-ico xlsx">XLS</span>文件二链接</div>
+              <div class="doc-thumb"><span class="doc-ico zip">ZIP</span>文件三链接</div>
+            </div>
+          </div>
+
+          <div class="info-section exec-record" data-wo-type="临时工单" data-wo-label="临时工单">
+            <div class="section-title">执行记录（4）</div>
+            <div class="info-row"><span class="label">到场时间</span><span class="value">2026/07/03 14:00</span></div>
+            <div class="info-row"><span class="label">完工时间</span><span class="value">2026/07/03 18:04</span></div>
+            <div class="info-row"><span class="label">更换部件</span><span class="value">轴承润滑脂 ×2、碳刷 ×4、接触器 ×1、继电器 ×3、指示灯 ×2</span></div>
+            <div class="info-row"><span class="label">是否恢复正常</span><span class="value val-success">是</span></div>
+            <div class="info-row"><span class="label">绝缘油色谱复测</span><span class="value">乙炔含量 0.3μL/L，判定合格</span></div>
+            <div class="info-row"><span class="label">保护定值核对</span><span class="value">与定值单一致，已签字确认</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片一</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片二</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">照片三</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>文件一链接</div>
+              <div class="doc-thumb"><span class="doc-ico xlsx">XLS</span>文件二链接</div>
+              <div class="doc-thumb"><span class="doc-ico zip">ZIP</span>文件三链接</div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">问题记录</div>
+            <div class="sub-label">问题一</div>
+            <div class="info-row"><span class="label">问题描述</span><span class="value">巡检发现塔筒外壁防腐涂层局部剥落，面积约 0.6㎡，基材可见轻微锈蚀。</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">剥落处</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">锈蚀</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">全景</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>问题一说明.pdf</div>
+              <div class="doc-thumb"><span class="doc-ico xlsx">XLS</span>测量记录.xlsx</div>
+            </div>
+            <div class="sub-label">问题二</div>
+            <div class="info-row"><span class="label">问题描述</span><span class="value">机舱控制柜散热风扇异音，疑似轴承磨损，需停机更换。</span></div>
+            <div class="sub-label">现场照片</div>
+            <div class="thumb-grid">
+              <div class="thumb s1"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">风扇</span></div>
+              <div class="thumb s2"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">异音处</span></div>
+              <div class="thumb s3"><svg class="ph-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span class="cap">控制柜</span></div>
+            </div>
+            <div class="sub-label">附件文件</div>
+            <div class="doc-thumbs">
+              <div class="doc-thumb"><span class="doc-ico pdf">PDF</span>问题二说明.pdf</div>
+              <div class="doc-thumb"><span class="doc-ico zip">ZIP</span>影像资料.zip</div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="section-title">验收意见</div>
+            <div class="info-row"><span class="label">验收结果</span><span class="value val-success">合格</span></div>
+            <div class="info-row"><span class="label">验收意见</span><span class="value">叶片前缘裂纹已按工艺完成修复，防腐涂层施工合格，整体符合验收标准。</span></div>
+            <div class="info-row"><span class="label">验收人</span><span class="value">张伟峰</span></div>
+            <div class="info-row"><span class="label">验收时间</span><span class="value">2026-05-29 16:40</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的 -->
+      <div class="screen" id="screen-profile" data-tab="3">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()" style="visibility:hidden"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">我的</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="profile-info">
+              <div class="name">李XX</div>
+              <div class="role">业务人员_工单负责人<br>新能源公司_运维部_电气班组</div>
+            </div>
+            <div class="profile-logout" onclick="showModal('退出登录', '确认退出当前账号？', () => showToast('已退出登录'))">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </div>
+          </div>
+          <div class="menu-item" onclick="navigateTo('screen-my-wo')">
+            <div class="left">
+              <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+              <span class="label">我的工单</span>
+            </div>
+            <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的工单 -->
+      <div class="screen" id="screen-my-wo">
+        <div class="nav-bar">
+          <div class="nav-back" onclick="goBack()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="nav-title">我的工单</div>
+          <div class="nav-action" style="visibility:hidden"></div>
+        </div>
+        <div class="screen-content no-tab">
+          <div class="list-item" data-type="维护工单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-001</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag warning">待开工</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="维护工单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-002</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag primary">执行中</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="维护工单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-003</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag warning">待确认</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="维护工单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-004</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag warning">待验收</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+          <div class="list-item" data-type="维护工单" onclick="navigateTo('screen-wo-detail', this)">
+            <div class="item-header">
+              <div>
+                <div class="item-code">WO-20260908-005</div>
+                <div class="item-title">WT-001 叶片维护工单</div>
+              </div>
+              <span class="tag danger">驳回修改</span>
+            </div>
+            <div class="item-meta"><span>类型：维护工单</span><span>场站：OOS-001</span></div>
+            <div class="item-footer">
+              <span class="item-meta" style="margin-top:0"><span>负责人：陈志远</span></span>
+              <span class="item-time" style="margin-top:0">计划开始时间：2026-09-12 09:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部标签栏 -->
+    <div class="tab-bar" id="tab-bar">
+      <div class="tab-item active" data-tab="0" onclick="switchTab(0)">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="tab-label">任务池</span>
+      </div>
+      <div class="tab-item" data-tab="1" onclick="switchTab(1)">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="tab-label">去领单</span>
+      </div>
+      <div class="tab-item" data-tab="2" onclick="switchTab(2)">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="tab-label">工单</span>
+      </div>
+      <div class="tab-item" data-tab="3" onclick="switchTab(3)">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="tab-label">我的</span>
+      </div>
+    </div>
+
+    <!-- 筛选弹窗（底部抽屉） -->
+    <div class="filter-sheet-overlay" id="filter-overlay" onclick="closeFilterPopup()"></div>
+    <div class="filter-sheet" id="filter-sheet">
+      <div class="filter-sheet-header">
+        <div class="title">筛选</div>
+        <div class="close" onclick="closeFilterPopup()">×</div>
+      </div>
+      <div class="filter-sheet-body" id="filter-sheet-body"></div>
+      <div class="filter-sheet-footer">
+        <button class="btn btn-default" onclick="resetFilterPopup()">重置</button>
+        <button class="btn btn-primary" onclick="applyFilterPopup()">确定</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="hideModal()"></div>
+    <div class="modal" id="modal">
+      <div class="modal-title" id="modal-title">提示</div>
+      <div class="modal-body" id="modal-body">内容</div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="hideModal()">关闭</button>
+        <button class="btn btn-primary" onclick="hideModal()">确定</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const tabScreens = ['screen-task-pool', 'screen-claim-list', 'screen-work-order', 'screen-profile'];
+    let currentTab = 0;
+    let history = [];
+
+    function switchTab(index) {
+      currentTab = index;
+      history = [];
+      showScreen(tabScreens[index], false);
+      updateTabBar(index);
+    }
+
+    function updateTabBar(index) {
+      document.querySelectorAll('.tab-item').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+      const hasTab = document.getElementById(tabScreens[index])?.dataset.tab !== undefined;
+      document.getElementById('tab-bar').style.display = hasTab ? 'flex' : 'none';
+    }
+
+    function navigateTo(screenId, woTypeEl) {
+      if (screenId === 'screen-wo-detail') {
+        // 执行记录（1）~（4）作为独立 Tab 全部展示，不再按工单类型互斥显示
+        initDetailTabs('screen-wo-detail');
+      }
+      const current = document.querySelector('.screen.active');
+      if (current) history.push(current.id);
+      showScreen(screenId, true);
+      const screen = document.getElementById(screenId);
+      const hasTab = screen?.dataset.tab !== undefined;
+      document.getElementById('tab-bar').style.display = hasTab ? 'flex' : 'none';
+      if (hasTab) {
+        currentTab = parseInt(screen.dataset.tab);
+        updateTabBar(currentTab);
+      }
+    }
+
+    function showScreen(screenId, animate) {
+      document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active', 'slide-in', 'slide-out');
+        s.style.display = 'none';
+      });
+      const target = document.getElementById(screenId);
+      target.style.display = 'flex';
+      target.classList.add('active');
+      if (animate) {
+        target.classList.add('slide-in');
+      }
+      const content = target.querySelector('.screen-content');
+      if (content) content.scrollTop = 0;
+    }
+
+    function goBack() {
+      const prev = history.pop();
+      if (prev) {
+        showScreen(prev, false);
+        const screen = document.getElementById(prev);
+        const hasTab = screen?.dataset.tab !== undefined;
+        document.getElementById('tab-bar').style.display = hasTab ? 'flex' : 'none';
+        if (hasTab) {
+          currentTab = parseInt(screen.dataset.tab);
+          updateTabBar(currentTab);
+        }
+      } else if (tabScreens.includes(document.querySelector('.screen.active')?.id)) {
+        // already on tab
+      } else {
+        switchTab(currentTab);
+      }
+    }
+
+    // 行内搜索 + 筛选弹窗（多维度，按页面配置）
+    const filterConfigs = {
+      'screen-task-pool': {
+        type: { label:'类型', values:['维护任务','故障任务','巡检任务','缺陷任务'] },
+        time: { label:'时间', values:['本周','本月'] },
+        status: { label:'状态', values:['待排程','已排程','已派单','已完成'] }
+      },
+      'screen-work-order': {
+        type: { label:'类型', values:['维护工单','故障工单','巡检工单','缺陷工单','临时工单'] },
+        time: { label:'时间', values:['本周','本月'] },
+        status: { label:'状态', values:['待接单','待开工','执行中','待确认','已完成','驳回修改'] }
+      },
+      'screen-claim-list': {
+        priority: { label:'优先级', values:['P1','P2','P3','P4'] },
+        type: { label:'类型', values:['维护任务','故障任务'] },
+        timeout: { label:'超时状态', values:['未超时','已超时'] }
+      }
+    };
+    const filterSelections = {
+      'screen-task-pool': { type:'all', time:'all', status:'all' },
+      'screen-work-order': { type:'all', time:'all', status:'all' },
+      'screen-claim-list': { priority:'all', type:'all', timeout:'all' }
+    };
+    let currentFilterScreen = null;
+
+    function onInlineSearch(screenId, input) {
+      const wrap = input.parentElement;
+      if (input.value) wrap.classList.add('has-value');
+      else wrap.classList.remove('has-value');
+      applyFilters(screenId);
+    }
+
+    function clearInlineSearch(screenId) {
+      const screen = document.getElementById(screenId);
+      const input = screen.querySelector('.search-input-wrap input');
+      input.value = '';
+      input.parentElement.classList.remove('has-value');
+      applyFilters(screenId);
+    }
+
+    function applyFilters(screenId) {
+      const screen = document.getElementById(screenId);
+      if (!screen) return;
+      const sel = filterSelections[screenId] || {};
+      const input = screen.querySelector('.search-input-wrap input');
+      const q = input ? input.value.trim().toLowerCase() : '';
+      let visible = 0;
+      screen.querySelectorAll('.list-item').forEach(item => {
+        let attrOk = true;
+        for (const key in sel) {
+          const itemVal = item.dataset[key] || 'all';
+          if (sel[key] !== 'all' && itemVal !== sel[key]) { attrOk = false; break; }
+        }
+        const textOk = !q || item.textContent.toLowerCase().includes(q);
+        const ok = attrOk && textOk;
+        item.style.display = ok ? '' : 'none';
+        if (ok) visible++;
+      });
+      let empty = screen.querySelector('.list-empty');
+      if (!empty) {
+        empty = document.createElement('div');
+        empty.className = 'list-empty empty-state';
+        empty.textContent = '暂无匹配的记录';
+        screen.querySelector('.screen-content').appendChild(empty);
+      }
+      empty.style.display = visible ? 'none' : 'block';
+      const anyFilter = Object.values(sel).some(v => v !== 'all');
+      const fbtn = screen.querySelector('.filter-btn');
+      if (fbtn) fbtn.classList.toggle('has-filter', anyFilter);
+    }
+
+    function openFilterPopup(screenId) {
+      currentFilterScreen = screenId;
+      const cfg = filterConfigs[screenId];
+      const sel = filterSelections[screenId];
+      let html = '';
+      for (const key in cfg) {
+        const g = cfg[key];
+        html += '<div class="filter-group-row"><div class="filter-group-title">' + g.label + '</div><div class="filter-chips">';
+        html += '<span class="filter-chip ' + (sel[key] === 'all' ? 'active' : '') + '" data-key="' + key + '" data-value="all">全部</span>';
+        g.values.forEach(v => {
+          html += '<span class="filter-chip ' + (sel[key] === v ? 'active' : '') + '" data-key="' + key + '" data-value="' + v + '">' + v + '</span>';
+        });
+        html += '</div></div>';
+      }
+      const body = document.getElementById('filter-sheet-body');
+      body.innerHTML = html;
+      body.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          chip.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+        });
+      });
+      document.getElementById('filter-overlay').classList.add('show');
+      document.getElementById('filter-sheet').classList.add('show');
+    }
+
+    function closeFilterPopup() {
+      document.getElementById('filter-overlay').classList.remove('show');
+      document.getElementById('filter-sheet').classList.remove('show');
+    }
+
+    function resetFilterPopup() {
+      const body = document.getElementById('filter-sheet-body');
+      body.querySelectorAll('.filter-group-row').forEach(row => {
+        row.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.value === 'all'));
+      });
+    }
+
+    function applyFilterPopup() {
+      const screenId = currentFilterScreen;
+      if (!screenId) return;
+      const body = document.getElementById('filter-sheet-body');
+      const cfg = filterConfigs[screenId];
+      for (const key in cfg) {
+        const active = body.querySelector('.filter-chip[data-key="' + key + '"].active');
+        filterSelections[screenId][key] = active ? active.dataset.value : 'all';
+      }
+      closeFilterPopup();
+      applyFilters(screenId);
+    }
+
+    function confirmClaim() {
+      const user = '当前用户';
+      showModal('确认领单', `领单人：${user}，确认领取该任务？`, () => {
+        showToast('领单成功');
+        setTimeout(() => goBack(), 800);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    let modalConfirmCb = null;
+    function showModal(title, body, onConfirm) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').textContent = body;
+      modalConfirmCb = onConfirm;
+      document.getElementById('modal-overlay').classList.add('show');
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function hideModal() {
+      document.getElementById('modal-overlay').classList.remove('show');
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    document.querySelector('.modal-footer .btn-primary').addEventListener('click', () => {
+      hideModal();
+      if (modalConfirmCb) modalConfirmCb();
+      modalConfirmCb = null;
+    });
+
+    // 统计卡片仅作信息展示，不绑定点击/选中交互
+    function initFilterCards(containerId) {
+      // 任务池与工单的统计卡片为非交互展示组件，无需选中态
+    }
+    initFilterCards('task-filter-grid');
+    initFilterCards('wo-filter-grid');
+
+    // 详情页横向可滑动 tab（任务详情 / 工单详情）
+    function initDetailTabs(screenId) {
+      const screen = document.getElementById(screenId);
+      if (!screen) return;
+      const sc = screen.querySelector('.screen-content');
+      const header = sc.querySelector('.detail-header');
+      if (!header) return;
+      const old = sc.querySelector('.detail-tabs');
+      if (old) old.remove();
+      const sections = Array.from(sc.querySelectorAll('.info-section')).filter(s => s.style.display !== 'none');
+      if (!sections.length) return;
+      screen.classList.add('has-detail-tabs');
+      const tabs = document.createElement('div');
+      tabs.className = 'detail-tabs';
+      sections.forEach((sec, i) => {
+        const st = sec.querySelector('.section-title');
+        const title = st ? st.textContent.trim() : ('区块' + (i + 1));
+        const tab = document.createElement('div');
+        tab.className = 'detail-tab' + (i === 0 ? ' active' : '');
+        tab.textContent = title;
+        // 执行记录类 Tab 额外标明其对应的工单类型
+        const woLabel = sec.dataset.woLabel;
+        if (woLabel) {
+          const badge = document.createElement('i');
+          badge.className = 'detail-tab-type';
+          badge.textContent = woLabel;
+          tab.appendChild(badge);
+        }
+        tab.addEventListener('click', () => {
+          sections.forEach((s, j) => s.classList.toggle('active', j === i));
+          tabs.querySelectorAll('.detail-tab').forEach((t, j) => t.classList.toggle('active', j === i));
+        });
+        tabs.appendChild(tab);
+        sec.classList.toggle('active', i === 0);
+      });
+      header.insertAdjacentElement('afterend', tabs);
+    }
+    initDetailTabs('screen-task-detail');
+    initDetailTabs('screen-wo-detail');
+
+    // 物理返回键支持
+    window.addEventListener('popstate', () => {
+      goBack();
+    });
+
+    // 阻止默认的 touch 拖动滚动边界回弹
+    document.body.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.screen-content')) return;
+      e.preventDefault();
+    }, { passive: false });
+  </script>
+</body>
+</html>
